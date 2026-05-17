@@ -329,7 +329,7 @@
     }
 
     function loadProducts() {
-      jsonp(GAS_URL + '?mode=products')
+      jsonp(GAS_URL + '?mode=products&key=kinovege2026')
         .then(data => {
           products = data;
           renderProducts();
@@ -504,8 +504,7 @@
         total
       };
 
-      const url = GAS_URL + '?mode=save&order=' + encodeURIComponent(JSON.stringify(order));
-
+      const url = GAS_URL + '?mode=save&key=kinovege2026&order=' + encodeURIComponent(JSON.stringify(order));
       jsonp(url)
         .then(res => {
           alert('予約が完了しました。\n予約番号：' + res.reservationId);
