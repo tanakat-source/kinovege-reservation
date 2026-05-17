@@ -329,17 +329,27 @@
     }
 
     function loadProducts() {
-      jsonp(GAS_URL + '?mode=products&key=kinovege2026')
-        .then(data => {
-          products = data;
-          renderProducts();
-        })
-        .catch(err => {
-          document.getElementById('productList').innerHTML =
-            '<p style="color:red;">商品を読み込めませんでした。</p>';
-          console.error(err);
-        });
-    }
+  document.getElementById('productList').innerHTML = '商品API確認中...';
+
+  jsonp(GAS_URL + '?mode=products&key=kinovege2026')
+    .then(data => {
+      console.log('商品データ', data);
+
+      if (data.error) {
+        document.getElementById('productList').innerHTML =
+          '<p style="color:red;">APIエラー：' + data.error + '</p>';
+        return;
+      }
+
+      products = data;
+      renderProducts();
+    })
+    .catch(err => {
+      document.getElementById('productList').innerHTML =
+        '<p style="color:red;">商品を読み込めませんでした：' + err.message + '</p>';
+      console.error(err);
+    });
+}
 
     function getEmoji(name) {
       for (const key in emojiMap) {
