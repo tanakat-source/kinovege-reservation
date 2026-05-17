@@ -154,10 +154,26 @@
     }
 
     .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.stock-none {
+  color: #999;
+}
+
+.disabled-product {
+  opacity: 0.55;
+}
+    
 
     .form-area {
       background: white;
@@ -229,14 +245,7 @@
       <div class="subtitle">新鮮な野菜をかんたん予約</div>
     </div>
 
-    <div class="notice">
-      商品を選んで数量を入力してください。<br>
-      まずはテスト版です。
-    </div>
-
-    <div id="lineInfo" class="notice">
-      LINE情報確認中...
-    </div>
+    <div id="lineInfo" style="display:none;"></div>
 
     <div id="productList" class="loading">
       商品を読み込み中...
@@ -318,9 +327,7 @@
         lineProfile.userId = profile.userId;
         lineProfile.displayName = profile.displayName;
 
-        box.innerHTML =
-          'LINE名：' + profile.displayName + '<br>' +
-          'LINE ID取得成功';
+        box.innerHTML = '';
 
       } catch (err) {
         box.innerHTML = 'LIFFエラー：' + err.message;
@@ -359,38 +366,72 @@
     }
 
     function renderProducts() {
-      const list = document.getElementById('productList');
 
-      if (!products.length) {
-        list.innerHTML = '<p>現在、予約できる商品がありません。</p>';
-        return;
-      }
+  const list = document.getElementById('productList');
 
-      list.className = '';
+  if (!products.length) {
+    list.innerHTML = '<p>現在、予約できる商品がありません。</p>';
+    return;
+  }
 
-      list.innerHTML = products.map(p => {
-        cart[p.id] = cart[p.id] || 0;
+  list.className = '';
 
-        return `
-          <div class="product">
-            <div class="thumb">${getEmoji(p.name)}</div>
+  list.innerHTML = products.map(p => {
 
-            <div class="info">
-              <div class="name">${p.name}</div>
-              <div class="price">${p.price.toLocaleString()}円 / ${p.unit}</div>
-              <div class="stock">在庫：${p.stock}</div>
-            </div>
+    cart[p.id] = cart[p.id] || 0;
 
-            <div class="counter">
-              <button class="count-btn" onclick="changeQty('${p.id}', -1)">−</button>
-              <div class="count" id="count-${p.id}">${cart[p.id]}</div>
-              <button class="count-btn" onclick="changeQty('${p.id}', 1)">＋</button>
-            </div>
+    const isStockOut = p.stockStatus === '在庫なし';
+
+    return `
+      <div class="product ${isStockOut ? 'disabled-product' : ''}">
+        
+        <div class="thumb">
+          ${
+            p.imageUrl
+              ? `<img src="${p.imageUrl}" alt="${p.name}">`
+              : getEmoji(p.name)
+          }
+        </div>
+
+        <div class="info">
+          <div class="name">${p.name}</div>
+
+          <div class="price">
+            ${p.price.toLocaleString()}円 / ${p.unit}
           </div>
-        `;
-      }).join('');
-    }
 
+          <div class="stock ${isStockOut ? 'stock-none' : ''}">
+            ${p.stockStatus}
+          </div>
+        </div>
+
+        <div class="counter">
+          <button
+            class="count-btn"
+            onclick="changeQty('${p.id}', -1)"
+            ${isStockOut ? 'disabled' : ''}
+          >
+            −
+          </button>
+
+          <div class="count" id="count-${p.id}">
+            ${cart[p.id]}
+          </div>
+
+          <button
+            class="count-btn"
+            onclick="changeQty('${p.id}', 1)"
+            ${isStockOut ? 'disabled' : ''}
+          >
+            ＋
+          </button>
+        </div>
+
+      </div>
+    `;
+
+  }).join('');
+}
     function changeQty(id, amount) {
       const product = products.find(p => p.id === id);
       const current = cart[id] || 0;
@@ -398,10 +439,10 @@
 
       if (next < 0) return;
 
-      if (next > product.stock) {
-        alert('在庫数を超えています');
-        return;
-      }
+      if (product.stockStatus === '在庫なし') {
+  alert('現在、在庫なしです');
+  return;
+}
 
       cart[id] = next;
       document.getElementById(`count-${id}`).textContent = next;
