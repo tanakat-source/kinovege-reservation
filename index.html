@@ -268,15 +268,15 @@ async function initLiff() {
   const box = document.getElementById('lineInfo');
 
   try {
-    if (box) box.innerHTML = 'LIFF初期化中...';
+    box.innerHTML = 'LIFF初期化中...';
 
     await liff.init({ liffId: LIFF_ID });
 
-    if (box) {
-      box.innerHTML =
-        'LIFF初期化OK<br>' +
-        'LINE内: ' + liff.isInClient() + '<br>' +
-        'ログイン: ' + liff.isLoggedIn();
+    // 未ログインならログイン
+    if (!liff.isLoggedIn()) {
+      box.innerHTML = 'LINEログインへ移動中...';
+      liff.login();
+      return;
     }
 
     const profile = await liff.getProfile();
@@ -284,16 +284,12 @@ async function initLiff() {
     lineProfile.userId = profile.userId;
     lineProfile.displayName = profile.displayName;
 
-    if (box) {
-      box.innerHTML =
-        'LINE名：' + lineProfile.displayName + '<br>' +
-        'LINE ID取得：OK';
-    }
+    box.innerHTML =
+      'LINE名：' + profile.displayName + '<br>' +
+      'LINE ID取得成功';
 
   } catch (err) {
-    if (box) {
-      box.innerHTML = 'LIFFエラー：' + err.message;
-    }
+    box.innerHTML = 'LIFFエラー：' + err.message;
     console.error(err);
   }
 }
