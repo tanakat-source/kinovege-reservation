@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
@@ -47,7 +45,6 @@
     }
 
     .notice {
-
       background: #fff8df;
       border: 1px solid #ead890;
       border-radius: 14px;
@@ -161,69 +158,66 @@
       padding: 40px;
       color: #666;
     }
+
     .form-area {
-  background: white;
-  border-radius: 18px;
-  padding: 18px;
-  margin: 20px 0 120px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin: 20px 0 120px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
 
-.form-area h2 {
-  margin-top: 0;
-  color: #3f6f2e;
-}
+    .form-area h2 {
+      margin-top: 0;
+      color: #3f6f2e;
+    }
 
-.selected-box {
-  background: #f7f3e8;
-  border-radius: 14px;
-  padding: 14px;
-  margin-bottom: 18px;
-}
+    .selected-box {
+      background: #f7f3e8;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
 
-.selected-box h3 {
-  margin-top: 0;
-}
+    .selected-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #e1d8c4;
+    }
 
-.selected-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px solid #e1d8c4;
-}
+    .selected-total {
+      text-align: right;
+      font-size: 20px;
+      font-weight: bold;
+      color: #4f8f3a;
+      margin-top: 12px;
+    }
 
-.selected-total {
-  text-align: right;
-  font-size: 20px;
-  font-weight: bold;
-  color: #4f8f3a;
-  margin-top: 12px;
-}
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 14px 0 6px;
+    }
 
-label {
-  display: block;
-  font-weight: bold;
-  margin: 14px 0 6px;
-}
+    label span {
+      color: red;
+      font-size: 12px;
+    }
 
-label span {
-  color: red;
-  font-size: 12px;
-}
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
 
-input,
-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-
-textarea {
-  min-height: 90px;
-}
+    textarea {
+      min-height: 90px;
+    }
   </style>
 </head>
 
@@ -239,9 +233,10 @@ textarea {
       商品を選んで数量を入力してください。<br>
       まずはテスト版です。
     </div>
+
     <div id="lineInfo" class="notice">
-  LINE情報確認中...
-</div>
+      LINE情報確認中...
+    </div>
 
     <div id="productList" class="loading">
       商品を読み込み中...
@@ -258,41 +253,13 @@ textarea {
 
   <script>
     const LIFF_ID = '2010107887-oOC80iWL';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzwHB51Crng4I11h39yh261hi29RK-rT0VAYJaSQiYgug4QGA_AcivzftEHp5H7-Wf1/exec';
 
-let lineProfile = {
-  userId: '',
-  displayName: ''
-};
+    let lineProfile = {
+      userId: '',
+      displayName: ''
+    };
 
-async function initLiff() {
-  const box = document.getElementById('lineInfo');
-
-  try {
-    box.innerHTML = 'LIFF初期化中...';
-
-    await liff.init({ liffId: LIFF_ID });
-
-    // 未ログインならログイン
-    if (!liff.isLoggedIn()) {
-      box.innerHTML = 'LINEログインへ移動中...';
-      liff.login();
-      return;
-    }
-
-    const profile = await liff.getProfile();
-
-    lineProfile.userId = profile.userId;
-    lineProfile.displayName = profile.displayName;
-
-    box.innerHTML =
-      'LINE名：' + profile.displayName + '<br>' +
-      'LINE ID取得成功';
-
-  } catch (err) {
-    box.innerHTML = 'LIFFエラー：' + err.message;
-    console.error(err);
-  }
-}
     let products = [];
     let cart = {};
 
@@ -310,18 +277,68 @@ async function initLiff() {
       'オクラ': '🌿'
     };
 
+    function jsonp(url) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+
+        window[callbackName] = data => {
+          delete window[callbackName];
+          script.remove();
+          resolve(data);
+        };
+
+        const script = document.createElement('script');
+        script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+        script.onerror = () => {
+          delete window[callbackName];
+          script.remove();
+          reject(new Error('通信に失敗しました'));
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    async function initLiff() {
+      const box = document.getElementById('lineInfo');
+
+      try {
+        box.innerHTML = 'LIFF初期化中...';
+
+        await liff.init({ liffId: LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          box.innerHTML = 'LINEログインへ移動中...';
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+
+        lineProfile.userId = profile.userId;
+        lineProfile.displayName = profile.displayName;
+
+        box.innerHTML =
+          'LINE名：' + profile.displayName + '<br>' +
+          'LINE ID取得成功';
+
+      } catch (err) {
+        box.innerHTML = 'LIFFエラー：' + err.message;
+        console.error(err);
+      }
+    }
+
     function loadProducts() {
-      google.script.run
-        .withSuccessHandler(data => {
+      jsonp(GAS_URL + '?mode=products')
+        .then(data => {
           products = data;
           renderProducts();
         })
-        .withFailureHandler(err => {
+        .catch(err => {
           document.getElementById('productList').innerHTML =
             '<p style="color:red;">商品を読み込めませんでした。</p>';
           console.error(err);
-        })
-        .getProducts();
+        });
     }
 
     function getEmoji(name) {
@@ -370,6 +387,7 @@ async function initLiff() {
       const next = current + amount;
 
       if (next < 0) return;
+
       if (next > product.stock) {
         alert('在庫数を超えています');
         return;
@@ -392,113 +410,115 @@ async function initLiff() {
     }
 
     function goNext() {
-  const selected = products
-    .filter(p => cart[p.id] > 0)
-    .map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      unit: p.unit,
-      qty: cart[p.id],
-      subtotal: p.price * cart[p.id]
-    }));
+      const selected = products
+        .filter(p => cart[p.id] > 0)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          unit: p.unit,
+          qty: cart[p.id],
+          subtotal: p.price * cart[p.id]
+        }));
 
-  if (!selected.length) {
-    alert('商品を1つ以上選んでください');
-    return;
-  }
+      if (!selected.length) {
+        alert('商品を1つ以上選んでください');
+        return;
+      }
 
-  const total = selected.reduce((sum, item) => sum + item.subtotal, 0);
+      if (document.getElementById('formArea')) {
+        document.getElementById('formArea').remove();
+      }
 
-  const formHtml = `
-    <div class="form-area" id="formArea">
-      <h2>お客様情報</h2>
+      const total = selected.reduce((sum, item) => sum + item.subtotal, 0);
 
-      <div class="selected-box">
-        <h3>ご予約内容</h3>
-        ${selected.map(item => `
-          <div class="selected-row">
-            <span>${item.name} × ${item.qty}</span>
-            <strong>${item.subtotal.toLocaleString()}円</strong>
+      const formHtml = `
+        <div class="form-area" id="formArea">
+          <h2>お客様情報</h2>
+
+          <div class="selected-box">
+            <h3>ご予約内容</h3>
+            ${selected.map(item => `
+              <div class="selected-row">
+                <span>${item.name} × ${item.qty}</span>
+                <strong>${item.subtotal.toLocaleString()}円</strong>
+              </div>
+            `).join('')}
+            <div class="selected-total">
+              合計 ${total.toLocaleString()}円
+            </div>
           </div>
-        `).join('')}
-        <div class="selected-total">
-          合計 ${total.toLocaleString()}円
+
+          <label>お名前 <span>必須</span></label>
+          <input type="text" id="customerName" placeholder="例）山田 太郎">
+
+          <label>電話番号 <span>必須</span></label>
+          <input type="tel" id="customerPhone" placeholder="例）090-1234-5678">
+
+          <label>備考</label>
+          <textarea id="note" placeholder="ご要望があれば入力してください"></textarea>
+
+          <button class="submit-btn" onclick="submitReservation()">予約を確定する</button>
         </div>
-      </div>
+      `;
 
-      <label>お名前 <span>必須</span></label>
-      <input type="text" id="customerName" placeholder="例）山田 太郎">
+      document.getElementById('productList').insertAdjacentHTML('afterend', formHtml);
+      document.getElementById('formArea').scrollIntoView({ behavior: 'smooth' });
+    }
 
-      <label>電話番号 <span>必須</span></label>
-      <input type="tel" id="customerPhone" placeholder="例）090-1234-5678">
+    function submitReservation() {
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const note = document.getElementById('note').value.trim();
 
-      <label>LINE名</label>
-      <input type="text" id="lineName" placeholder="例）たろう">
+      if (!name) {
+        alert('お名前を入力してください');
+        return;
+      }
 
-      <label>備考</label>
-      <textarea id="note" placeholder="ご要望があれば入力してください"></textarea>
+      if (!phone) {
+        alert('電話番号を入力してください');
+        return;
+      }
 
-      <button class="submit-btn" onclick="submitReservation()">予約を確定する</button>
-    </div>
-  `;
+      const items = products
+        .filter(p => cart[p.id] > 0)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          unit: p.unit,
+          qty: cart[p.id],
+          subtotal: p.price * cart[p.id]
+        }));
 
-  document.getElementById('productList').insertAdjacentHTML('afterend', formHtml);
-  document.getElementById('formArea').scrollIntoView({ behavior: 'smooth' });
-}
-function submitReservation() {
-  const name = document.getElementById('customerName').value.trim();
-  const phone = document.getElementById('customerPhone').value.trim();
-  const lineName = document.getElementById('lineName').value.trim();
-  const note = document.getElementById('note').value.trim();
+      const total = items.reduce((sum, item) => sum + item.subtotal, 0);
 
-  if (!name) {
-    alert('お名前を入力してください');
-    return;
-  }
+      const order = {
+        name,
+        phone,
+        lineUserId: lineProfile.userId,
+        lineDisplayName: lineProfile.displayName,
+        note,
+        items,
+        total
+      };
 
-  if (!phone) {
-    alert('電話番号を入力してください');
-    return;
-  }
+      const url = GAS_URL + '?mode=save&order=' + encodeURIComponent(JSON.stringify(order));
 
-  const items = products
-    .filter(p => cart[p.id] > 0)
-    .map(p => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      unit: p.unit,
-      qty: cart[p.id],
-      subtotal: p.price * cart[p.id]
-    }));
+      jsonp(url)
+        .then(res => {
+          alert('予約が完了しました。\n予約番号：' + res.reservationId);
+          location.reload();
+        })
+        .catch(err => {
+          alert('予約保存に失敗しました');
+          console.error(err);
+        });
+    }
 
-  const total = items.reduce((sum, item) => sum + item.subtotal, 0);
-
-  const order = {
-  name,
-  phone,
-  lineUserId: lineProfile.userId,
-  lineDisplayName: lineProfile.displayName,
-  lineName,
-  note,
-  items,
-  total
-};
-
-  google.script.run
-    .withSuccessHandler(res => {
-      alert('予約が完了しました。\n予約番号：' + res.reservationId);
-      location.reload();
-    })
-    .withFailureHandler(err => {
-      alert('予約保存に失敗しました');
-      console.error(err);
-    })
-    .saveReservation(order);
-}
-initLiff();
+    initLiff();
+    loadProducts();
   </script>
 </body>
 </html>
-
