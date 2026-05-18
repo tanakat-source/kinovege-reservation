@@ -235,6 +235,67 @@
     textarea {
       min-height: 90px;
     }
+    .thumb {
+  cursor: pointer;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 20px;
+  max-width: 520px;
+  margin: 40px auto;
+  padding: 18px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.modal-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #eef5e6;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 14px 0 8px;
+}
+
+.modal-price {
+  font-size: 16px;
+  color: #4f8f3a;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.modal-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #444;
+  white-space: pre-wrap;
+}
+
+.modal-close {
+  width: 100%;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #4f8f3a;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+}
   </style>
 </head>
 
@@ -260,7 +321,15 @@
       <button class="submit-btn" onclick="goNext()">予約内容を確認する</button>
     </div>
   </div>
-
+  <div id="productModal" class="modal" onclick="closeProductModal(event)">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <img id="modalImage" class="modal-img" src="" alt="">
+    <div id="modalTitle" class="modal-title"></div>
+    <div id="modalPrice" class="modal-price"></div>
+    <div id="modalDescription" class="modal-desc"></div>
+    <button class="modal-close" onclick="closeProductModal()">閉じる</button>
+  </div>
+</div>
   <script>
     const LIFF_ID = '2010107887-oOC80iWL';
     const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCYD5zchffdB4Y1sJPDGgE5JK3UTay5knABEQa6bh3xI7ZUfHSsO5wX86T0z69neL6/exec';
@@ -386,13 +455,13 @@
     return `
       <div class="product ${isStockOut ? 'disabled-product' : ''}">
         
-        <div class="thumb">
-          ${
-            p.imageUrl
-              ? `<img src="${p.imageUrl}" alt="${p.name}">`
-              : getEmoji(p.name)
-          }
-        </div>
+        <div class="thumb" onclick="openProductModal('${p.id}')">
+  ${
+    p.imageUrl
+      ? `<img src="${p.imageUrl}" alt="${p.name}">`
+      : getEmoji(p.name)
+  }
+</div>
 
         <div class="info">
           <div class="name">${p.name}</div>
@@ -432,6 +501,36 @@
     `;
 
   }).join('');
+}
+    function openProductModal(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  const image = product.imageUrl || '';
+  const title = product.name || '';
+  const price = `${Number(product.price).toLocaleString()}円 / ${product.unit || ''}`;
+  const desc = product.description || '商品説明はまだ登録されていません。';
+
+  const modalImage = document.getElementById('modalImage');
+
+  if (image) {
+    modalImage.src = image;
+    modalImage.style.display = 'block';
+  } else {
+    modalImage.src = '';
+    modalImage.style.display = 'none';
+  }
+
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalPrice').textContent = price;
+  document.getElementById('modalDescription').textContent = desc;
+
+  document.getElementById('productModal').style.display = 'block';
+}
+
+function closeProductModal(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('productModal').style.display = 'none';
 }
     function changeQty(id, amount) {
       const product = products.find(p => p.id === id);
