@@ -723,8 +723,10 @@ if (!name) {
 });
     }
 
-    initLiff();
-    loadProducts();
+    window.addEventListener('DOMContentLoaded', function () {
+  loadProducts();
+  initLiff();
+});
   </script>
 </body>
 </html>
