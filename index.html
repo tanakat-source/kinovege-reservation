@@ -238,7 +238,15 @@
     .thumb {
   cursor: pointer;
 }
-
+select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  background: white;
+}
 .modal {
   display: none;
   position: fixed;
@@ -605,7 +613,24 @@ function closeProductModal(event) {
 
           <label>電話番号 <span>必須</span></label>
           <input type="tel" id="customerPhone" placeholder="例）090-1234-5678">
+          <label>受け取り方法 <span>必須</span></label>
 
+<select id="receiveType" onchange="toggleDeliveryNotice()">
+  <option value="取り置き">取り置き</option>
+  <option value="配達">配達（5袋以上）</option>
+</select>
+
+<div id="deliveryNotice" style="
+  display:none;
+  margin-top:10px;
+  background:#fff8df;
+  border:1px solid #ead890;
+  border-radius:12px;
+  padding:12px;
+  font-size:14px;
+">
+  配達は合計5袋以上から受付しています。
+</div>
           <label>備考</label>
           <textarea id="note" placeholder="ご要望があれば入力してください"></textarea>
 
@@ -616,12 +641,21 @@ function closeProductModal(event) {
       document.getElementById('productList').insertAdjacentHTML('afterend', formHtml);
       document.getElementById('formArea').scrollIntoView({ behavior: 'smooth' });
     }
+    function toggleDeliveryNotice() {
 
+  const type = document.getElementById('receiveType').value;
+
+  document.getElementById('deliveryNotice').style.display =
+    type === '配達'
+      ? 'block'
+      : 'none';
+}
     function submitReservation() {
       const name = document.getElementById('customerName').value.trim();
       const phone = document.getElementById('customerPhone').value.trim();
       const note = document.getElementById('note').value.trim();
-
+      const receiveType =
+  document.getElementById('receiveType').value;
       if (!name) {
         alert('お名前を入力してください');
         return;
@@ -644,7 +678,15 @@ function closeProductModal(event) {
         }));
 
       const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+      const totalQty = items.reduce(
+  (sum, item) => sum + item.qty,
+  0
+);
 
+if (receiveType === '配達' && totalQty < 5) {
+  alert('配達は合計5袋以上からです');
+  return;
+}
       const order = {
         name,
         phone,
@@ -652,6 +694,7 @@ function closeProductModal(event) {
         lineDisplayName: lineProfile.displayName,
         note,
         items,
+        receiveType,
         total
       };
 
