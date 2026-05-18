@@ -617,7 +617,7 @@ function closeProductModal(event) {
 
 <select id="receiveType" onchange="toggleDeliveryNotice()">
   <option value="取り置き">取り置き</option>
-  <option value="配達">配達（5袋以上）</option>
+  <option value="配達">配達（1,500円以上）</option>
 </select>
 
 <div id="deliveryNotice" style="
@@ -629,7 +629,7 @@ function closeProductModal(event) {
   padding:12px;
   font-size:14px;
 ">
-  配達は合計5袋以上から受付しています。
+  配達は合計1,500円以上から受付しています。
 </div>
           <label>備考</label>
           <textarea id="note" placeholder="ご要望があれば入力してください"></textarea>
@@ -678,13 +678,8 @@ function closeProductModal(event) {
         }));
 
       const total = items.reduce((sum, item) => sum + item.subtotal, 0);
-      const totalQty = items.reduce(
-  (sum, item) => sum + item.qty,
-  0
-);
-
-if (receiveType === '配達' && totalQty < 5) {
-  alert('配達は合計5袋以上からです');
+      if (receiveType === '配達' && total < 1500) {
+  alert('配達は合計1,500円以上からです');
   return;
 }
       const order = {
