@@ -645,6 +645,11 @@ function closeProductModal(event) {
     function toggleDeliveryNotice() {
 
   const type = document.getElementById('receiveType').value;
+      if (!lineProfile.userId) {
+  alert('LINE情報の取得中です。少し待ってからもう一度押してください。');
+  resetSubmitButton();
+  return;
+}
 
   document.getElementById('deliveryNotice').style.display =
     type === '配達'
