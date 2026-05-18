@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
@@ -104,9 +104,10 @@
     }
 
     button {
-      border: none;
-      cursor: pointer;
-    }
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
 
     .count-btn {
       width: 36px;
@@ -634,7 +635,7 @@ function closeProductModal(event) {
           <label>備考</label>
           <textarea id="note" placeholder="ご要望があれば入力してください"></textarea>
 
-          <button class="submit-btn" onclick="submitReservation()">予約を確定する</button>
+          <button class="submit-btn" onclick="submitReservation(event)">予約を確定する</button>
         </div>
       `;
 
@@ -650,21 +651,34 @@ function closeProductModal(event) {
       ? 'block'
       : 'none';
 }
-    function submitReservation() {
+    function submitReservation(event) {
+      const submitBtn = event.target;
+
+submitBtn.disabled = true;
+submitBtn.textContent = '予約を送信中...';
+submitBtn.style.opacity = '0.6';
+      function resetSubmitButton() {
+  submitBtn.disabled = false;
+  submitBtn.textContent = '予約を確定する';
+  submitBtn.style.opacity = '1';
+}
       const name = document.getElementById('customerName').value.trim();
       const phone = document.getElementById('customerPhone').value.trim();
       const note = document.getElementById('note').value.trim();
       const receiveType =
   document.getElementById('receiveType').value;
       if (!name) {
-        alert('お名前を入力してください');
-        return;
+  alert('お名前を入力してください');
+  resetSubmitButton();
+  return;
+}
       }
 
       if (!phone) {
-        alert('電話番号を入力してください');
-        return;
-      }
+  alert('電話番号を入力してください');
+  resetSubmitButton();
+  return;
+}
 
       const items = products
         .filter(p => cart[p.id] > 0)
@@ -680,6 +694,7 @@ function closeProductModal(event) {
       const total = items.reduce((sum, item) => sum + item.subtotal, 0);
       if (receiveType === '配達' && total < 1500) {
   alert('配達は合計1,500円以上からです');
+  resetSubmitButton();
   return;
 }
       const order = {
@@ -700,9 +715,10 @@ function closeProductModal(event) {
           location.reload();
         })
         .catch(err => {
-          alert('予約保存に失敗しました');
-          console.error(err);
-        });
+  alert('予約保存に失敗しました');
+  console.error(err);
+  resetSubmitButton();
+});
     }
 
     initLiff();
